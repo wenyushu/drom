@@ -6,10 +6,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.dormitory.dto.RoleAddUpdateDTO;
 import com.dormitory.dto.RoleQueryDTO;
 import com.dormitory.entity.SysRole;
-import com.dormitory.entity.SysUser;
+import com.dormitory.entity.SysUser; // <-- 【修复】导入 SysUser
 import com.dormitory.exception.BusinessException;
 import com.dormitory.mapper.SysRoleMapper;
-import com.dormitory.mapper.SysUserMapper;
+import com.dormitory.mapper.SysUserMapper; // <-- 【修复】注入 SysUserMapper
 import com.dormitory.service.ISysRoleService;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.ArrayUtil;
@@ -112,14 +112,14 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
             throw new BusinessException("超级管理员角色不允许删除");
         }
         
-        // 1. 校验角色是否仍被用户使用
+        // --- 【修复】 1. 校验角色是否仍被用户使用 ---
         boolean isRoleInUse = userMapper.exists(
                 new LambdaQueryWrapper<SysUser>().in(SysUser::getRoleId, roleIdList)
         );
         if (isRoleInUse) {
             throw new BusinessException("删除失败：所选角色中至少有一个仍被用户关联，请先解绑用户");
         }
-        // 校验结束
+        // --- 校验结束 ---
         
         // 2. 删除角色表记录 (MyBatis-Plus 自动逻辑删除)
         this.removeBatchByIds(roleIdList);
