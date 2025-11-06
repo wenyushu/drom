@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dormitory.mapper.DormAllocationMapper">
+
+    <select id="findAvailableBeds" resultType="com.dormitory.entity.DormBed">
+        SELECT
+        b.*,
+        r.room_capacity AS roomCapacity,
+        r.occupied_beds AS roomOccupiedBeds,
+        bd.building_id AS buildingId
+        FROM
+        dorm_bed b
+        INNER JOIN
+        dorm_room r ON b.room_id = r.room_id
+        INNER JOIN
+        dorm_floor f ON r.floor_id = f.floor_id
+        INNER JOIN
+        dorm_building bd ON f.building_id = bd.building_id
+        LEFT JOIN
+        dorm_floor_gender_rule fr ON f.floor_id = fr.floor_id
+        WHERE
+        b.is_occupied = 0
+        AND r.room_status = '0'
+        AND r.room_purpose_type = '00'  AND r.occupied_beds &lt; r.room_capacity
+        AND bd.campus_id = #{campusId}
+        AND bd.status = 0
+        AND bd.purpose_type = '0'
+        AND (
+        bd.gender_type = #{gender}
+        OR
+        ( bd.gender_type = '2' AND fr.gender_type = #{gender} )
+        )
+        ORDER BY
+        r.occupied_beds ASC, bd.building_id ASC,
+        r.room_id ASC,
+        b.bed_number ASC
+
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <select id="findAvailableStaffBeds" resultType="com.dormitory.entity.DormBed">
+        SELECT
+        b.*,
+        r.room_capacity AS roomCapacity,
+        r.occupied_beds AS roomOccupiedBeds,
+        bd.building_id AS buildingId
+        FROM
+        dorm_bed b
+        INNER JOIN
+        dorm_room r ON b.room_id = r.room_id
+        INNER JOIN
+        dorm_floor f ON r.floor_id = f.floor_id
+        INNER JOIN
+        dorm_building bd ON f.building_id = bd.building_id
+        WHERE
+        b.is_occupied = 0
+        AND r.room_status = '0'
+        AND r.room_purpose_type != '00'  AND r.occupied_beds &lt; r.room_capacity
+        AND bd.campus_id = #{campusId}
+        AND bd.status = 0
+        AND bd.purpose_type = '1'       ORDER BY
+        r.occupied_beds DESC,
+        r.room_id ASC,
+        b.bed_number ASC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+</mapper>
+
+<!--        关键 SQL 逻辑解释:-->
+
+<!--        INNER JOIN: 确保只查询存在有效房间和楼栋的床位。-->
+
+<!--        LEFT JOIN dorm_floor_gender_rule: 左连接楼层规则表，因为只有 bd.gender_type = '2' 时才需要用到 fr.gender_type。-->
+
+<!--        WHERE 条件:-->
+
+<!--        b.is_occupied = 0: 床位空闲。-->
+
+<!--        r.room_status = '0': 房间可用。-->
+
+<!--        r.occupied_beds < r.room_capacity: 房间未满。-->
+
+<!--        bd.campus_id = #{campusId}: 匹配学生所在校区。-->
+
+<!--        bd.status = 0: 楼栋可用。-->
+
+<!--        bd.purpose_type = '0': 确保是学生宿舍楼 (如果教职工也通过此逻辑分配，需调整)。-->
+
+<!--        性别匹配 (核心):-->
+
+<!--        bd.gender_type = #{gender}: 楼栋整体性别匹配。-->
+
+<!--        OR ( bd.gender_type = '2' AND fr.gender_type = #{gender} ): 或者楼栋是混合型，并且当前楼层的规则匹配学生性别。-->
+
+<!--        ORDER BY:-->
+
+<!--        r.occupied_beds DESC: 优先选择已经有人入住但未满的房间，有助于将同班/同专业学生尽量集中。你可以根据需要调整排序策略。-->
+
+<!--        LIMIT: 限制返回结果数量，提高效率。-->

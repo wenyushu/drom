@@ -1,0 +1,74 @@
+# ===================================================================
+# Spring Boot 核心配置
+# ===================================================================
+server:
+  port: 8080
+  servlet:
+    context-path: /api # 接口统一前缀
+
+spring:
+  # 数据库配置 (MySQL 8.4)
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/dorm_manager?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456 # <<< 请替换为你的实际密码
+
+  # Redis 配置 (默认端口 6379)
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      password: a1b2c3 # 如果有密码，在此填写
+      timeout: 5s
+
+# ===================================================================
+# MyBatis-Plus 配置
+# ===================================================================
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto # ID 策略
+      logic-delete-field: deleted # 逻辑删除字段
+      logic-not-delete-value: 0
+      logic-delete-value: 1
+
+# ===================================================================
+# Sa-Token 权限认证配置 (基于你提供的官方配置)
+# ===================================================================
+sa-token:
+  # token 名称（同时也是 cookie 名称）
+  token-name: satoken
+  # token 有效期（单位：秒） 默认30天 (2592000)，-1 代表永久有效
+  timeout: 2592000
+  # token 最低活跃频率（单位：秒），默认-1 代表不限制
+  active-timeout: -1
+  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
+  is-concurrent: true
+  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
+  is-share: false
+  # token 风格（默认可取值：uuid、simple-uuid、random-32、random-64、random-128、tik）
+  token-style: uuid
+  # 是否输出操作日志
+  is-log: true
+  # 是否在 Cookie 中保存 token (前后端分离建议设置为 true 或根据需求调整)
+  is-read-cookie: true
+
+# ===================================================================
+# SpringDoc 接口文档配置 (原生 Swagger UI)
+# ===================================================================
+springdoc:
+  swagger-ui:
+    # 访问路径，默认 /swagger-ui.html
+    path: /swagger-ui.html
+    # 启用 Try It Out 功能，方便测试
+    tryItOutEnabled: true
+  api-docs:
+    path: /v3/api-docs # 接口文档 JSON 路径
+
+  info:
+    title: 学生宿舍管理系统 API 文档
+    description: Spring Boot 3.x RESTful 接口
+    version: v1.0
