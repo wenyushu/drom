@@ -23,8 +23,13 @@ public interface IBizStaffInfoService extends IService<BizStaffInfo> {
     StaffInfoVO getStaffInfoByUserId(Long userId);
     
     /**
-     * 更新教职工信息 (Admin/人事 操作)
-     * 【核心修正】：参数类型改为 StaffInfoUpdateDTO
+     * 更新教职工信息 (Admin/人事 操作)，参数类型改为 StaffInfoUpdateDTO
      */
     void updateStaffInfo(StaffInfoUpdateDTO updateDTO);
+    
+    /**
+     * 新增教职工档案
+     * 新增：带校验的新增方法
+     */
+    void addStaffInfo(BizStaffInfo staffInfo);
 }

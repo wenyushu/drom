@@ -68,8 +68,9 @@ public class BizStaffInfoController {
     @SaCheckPermission("staff:info:add") // 权限：新增
     @PostMapping
     public R<Void> add(@Valid @RequestBody BizStaffInfo staffInfo) {
-        // TODO: Service层需校验关联的用户ID是否已存在且是教职工/非学生类型
-        staffInfoService.save(staffInfo);
+        // 【修复】调用 Service 层带校验的方法
+        // staffInfoService.save(staffInfo); // 旧代码
+        staffInfoService.addStaffInfo(staffInfo); // 新代码
         return R.ok("教职工档案新增成功");
     }
 }

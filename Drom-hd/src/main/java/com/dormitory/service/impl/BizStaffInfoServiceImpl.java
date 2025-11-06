@@ -163,6 +163,45 @@ public class BizStaffInfoServiceImpl extends ServiceImpl<BizStaffInfoMapper, Biz
     }
     
     /**
+     * 新增：实现带校验的新增
+     * 新增教职工信息 (用于同步 SysUser 新增的记录)
+     */
+    @Override
+    @Transactional
+    public void addStaffInfo(BizStaffInfo staffInfo) {
+        if (staffInfo.getUserId() == null) {
+            throw new BusinessException("新增档案失败：必须关联用户ID (userId)");
+        }
+        
+        // 1. 校验关联的用户ID是否存在
+        SysUser user = userMapper.selectById(staffInfo.getUserId());
+        if (user == null) {
+            throw new BusinessException("新增档案失败：关联的用户ID " + staffInfo.getUserId() + " 不存在");
+        }
+        
+        // 2. 校验 userType 是否为教职工
+        if ("1".equals(user.getUserType())) { // 1=Student
+            throw new BusinessException("新增档案失败：该用户是学生，无法添加教职工档案");
+        }
+        
+        // 3. 校验该档案是否已存在
+        if (this.exists(new LambdaQueryWrapper<BizStaffInfo>().eq(BizStaffInfo::getUserId, staffInfo.getUserId()))) {
+            throw new BusinessException("新增档案失败：该用户的教职工档案已存在");
+        }
+        
+        // 4. 校验部门ID（如果提供了）
+        if (staffInfo.getDepartmentId() != null) {
+            if (!departmentMapper.exists(new LambdaQueryWrapper<SysDepartment>().eq(SysDepartment::getDeptId, staffInfo.getDepartmentId()))) {
+                throw new BusinessException("新增档案失败：关联的部门ID不存在");
+            }
+        }
+        
+        // 5. 执行保存
+        this.save(staffInfo);
+    }
+    
+    
+    /**
      * 【V5.1 修正】辅助方法：批量填充 StaffInfoVO 的关联信息 (含校区)
      */
     private List<StaffInfoVO> fillStaffVOInfo(List<BizStaffInfo> staffList) {

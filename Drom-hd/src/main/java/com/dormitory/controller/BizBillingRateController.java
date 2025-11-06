@@ -36,8 +36,9 @@ public class BizBillingRateController {
     @SaCheckPermission("biz:rate:add")
     @PostMapping
     public R<Void> add(@Valid @RequestBody BizBillingRate rate) {
-        // TODO: Service 层需要校验费率的唯一性 (例如，同一类型、同一生效日期的费率不能重复)
-        rateService.save(rate);
+        // 【修复】调用 Service 层带校验的方法
+        // rateService.save(rate); // <-- 旧代码
+        rateService.addRate(rate); // <-- 新代码
         return R.ok("费率新增成功");
     }
     
@@ -53,8 +54,9 @@ public class BizBillingRateController {
     @SaCheckPermission("biz:rate:remove")
     @DeleteMapping("/{rateId}")
     public R<Void> delete(@PathVariable Long rateId) {
-        // TODO: Service 层需要校验是否有正在生效或已出账的账单关联此费率
-        rateService.removeById(rateId);
+        // 【修复】调用 Service 层带校验的方法
+        // rateService.removeById(rateId); // <-- 旧代码
+        rateService.deleteRate(rateId); // <-- 新代码
         return R.ok("费率删除成功");
     }
 }

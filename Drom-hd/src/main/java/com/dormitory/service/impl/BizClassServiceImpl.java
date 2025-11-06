@@ -25,6 +25,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * 班级管理业务服务实现类
+ */
 @Service
 public class BizClassServiceImpl extends ServiceImpl<BizClassMapper, BizClass> implements IBizClassService {
     
@@ -64,7 +67,8 @@ public class BizClassServiceImpl extends ServiceImpl<BizClassMapper, BizClass> i
     
     @Override
     public void addClass(BizClass bizClass) {
-        // TODO: 校验 院系ID 和 辅导员ID 是否存在
+        // 修复：校验 院系ID 和 辅导员ID
+        validateForeignKeys(bizClass);
         this.save(bizClass);
     }
     
@@ -73,7 +77,32 @@ public class BizClassServiceImpl extends ServiceImpl<BizClassMapper, BizClass> i
         if (bizClass.getClassId() == null) {
             throw new BusinessException("班级ID不能为空");
         }
+        // 修复：校验 院系ID 和 辅导员ID
+        validateForeignKeys(bizClass);
         this.updateById(bizClass);
+    }
+    
+    /**
+     * 【新增】辅助方法：校验外键是否存在
+     */
+    private void validateForeignKeys(BizClass bizClass) {
+        // 1. 校验院系ID
+        if (bizClass.getDepartmentId() == null || !departmentMapper.exists(new LambdaQueryWrapper<SysDepartment>()
+                .eq(SysDepartment::getDeptId, bizClass.getDepartmentId()))) {
+            throw new BusinessException("操作失败：所属院系不存在");
+        }
+        
+        // 2. 校验辅导员ID（如果辅导员ID不为空）
+        if (bizClass.getCounselorUserId() != null) {
+            SysUser counselor = userMapper.selectById(bizClass.getCounselorUserId());
+            if (counselor == null) {
+                throw new BusinessException("操作失败：指定的辅导员用户ID不存在");
+            }
+            // 额外校验：确保指定的辅导员角色正确（例如，userType 必须是教职工）
+            if ("1".equals(counselor.getUserType())) { // 1=Student
+                throw new BusinessException("操作失败：不能指定学生作为辅导员");
+            }
+        }
     }
     
     @Override
